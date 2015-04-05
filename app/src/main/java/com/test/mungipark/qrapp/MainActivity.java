@@ -64,7 +64,7 @@ public class MainActivity extends Activity {
             }
 
         } else {
-            Toast.makeText(this, "바코드 스캔에 문제가 있습니다.",
+            Toast.makeText(this, "QR 스캔에 문제가 있습니다.",
                     Toast.LENGTH_LONG).show();
         }
     }
