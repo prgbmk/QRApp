@@ -24,7 +24,7 @@ import java.net.URL;
 
 public class MainActivity extends Activity {
 
-    private TextView tvResult;
+    public TextView tvResult;
     private String result;//DB결과값
 
 
@@ -137,7 +137,7 @@ public class MainActivity extends Activity {
     private String ShowData(){
         URL url = null;
         try {
-            url = new URL("http://192.168.0.104/insert__menu.php");
+            url = new URL("http://192.168.0.104/insert_menu.php");
 
             HttpURLConnection http = (HttpURLConnection) url.openConnection();//php접속
 
@@ -150,8 +150,8 @@ public class MainActivity extends Activity {
             //php에 파라미터 넘겨주는 작업 시작.
             StringBuffer buffer = new StringBuffer();
             buffer.append("date").append("=").append("20150503").append("&");
-            buffer.append("name").append("=").append("알레르기약");
-            buffer.append("number").append("=").append(30);
+            buffer.append("name").append("=").append("알레르기약").append("&");
+            buffer.append("number").append("=").append(30).append("&");
             buffer.append("type").append("=").append(1);
 
             //Php에 파라미터 값 넘기기
