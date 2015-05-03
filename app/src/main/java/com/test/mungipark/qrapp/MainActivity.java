@@ -24,7 +24,7 @@ import java.net.URL;
 
 public class MainActivity extends Activity {
 
-    public TextView tvResult;
+    private TextView tvResult;
     private String result;//DB결과값
 
 
@@ -43,11 +43,15 @@ public class MainActivity extends Activity {
         Button btnScanQRCode = (Button) this
                 .findViewById(R.id.buttonScanQrCode);
         Button DBbtn = (Button) this.findViewById(R.id.DBbtn);
+        Button Showbtn = (Button) this.findViewById(R.id.showbtn);
 
+        //DB정보 쳐넣어
         DBbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 new inputDB().execute();//DB접근 스레드 시작.
+                tvResult.setText(result);//처리된 Php결과문 표시
+                Log.d("TextView 갱신", "너냐?");
             }
         });
 
@@ -63,6 +67,15 @@ public class MainActivity extends Activity {
 
             }
         });
+        Showbtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new showDB().execute();
+                tvResult.setText(result);
+            }
+        });
+
+
 
     }
 
@@ -100,13 +113,23 @@ public class MainActivity extends Activity {
         protected String doInBackground(Void... params) {
             String output;
             Log.d("백그라운드 작업", "실행완료");
-            output = ShowData();
+            output = InsertData();
             return output;
         }
 
         protected void onPostExecute(String temp){
 
 
+        }
+    }
+
+    private class showDB extends AsyncTask<Void, Void, String>{
+
+        protected String doInBackground(Void... params) {
+            String output;
+            Log.d("읽기 작업", "실행완료");
+            output = ShowData();
+            return output;
         }
     }
 
@@ -133,8 +156,8 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    //데이터 넘기는 함수 - AsyncTask 스레드에 탐재할 함수
-    private String ShowData(){
+    //DB데이터 쓰는 함수 - AsyncTask 스레드에 탐재할 함수
+    private String InsertData(){
         URL url = null;
         try {
             url = new URL("http://192.168.0.104/insert_menu.php");
@@ -169,8 +192,8 @@ public class MainActivity extends Activity {
                 builder.append(str + "\n");
             }
             result = builder.toString();
-            Log.d("DB Connection Test", "Test Complete");
-            tvResult.setText(result);//처리된 Php결과문 표시
+
+
 
 
         } catch (MalformedURLException e) {
@@ -181,5 +204,53 @@ public class MainActivity extends Activity {
 
         return result;
     }
+    //DB데이터 읽는 함수(해당 날짜의 데이터만 읽어오기) - AsyncTask 스레드에 탐재할 함수
+    private String ShowData(){
+        URL url = null;
+        try {
+            url = new URL("http://192.168.0.104/show_data_date.php");
+
+            HttpURLConnection http = (HttpURLConnection) url.openConnection();//php접속
+
+            http.setDefaultUseCaches(false);
+            http.setDoInput(true);//서버 읽기 모드
+            http.setDoOutput(true);//서버 쓰기 모드
+            http.setRequestMethod("POST");//POST방식 전송(보안용)
+            http.setRequestProperty("content-type", "application/x-www-form-urlencoded");
+
+            //php에 파라미터 넘겨주는 작업 시작.
+            StringBuffer buffer = new StringBuffer();
+            buffer.append("date").append("=").append("20150503");
+
+
+            //Php에 파라미터 값 넘기기
+            OutputStreamWriter outStream = new OutputStreamWriter(http.getOutputStream(), "UTF-8");
+            PrintWriter writer = new PrintWriter(outStream);
+            writer.write(buffer.toString());
+            writer.flush();
+
+            //파라미터값 넘기고나서 나오는 결과 받기
+            InputStreamReader tmp = new InputStreamReader(http.getInputStream(), "UTF-8");
+            BufferedReader reader = new BufferedReader(tmp);
+            StringBuilder builder = new StringBuilder();
+            String str;
+            while((str = reader.readLine()) != null){
+                builder.append(str + "\n");
+            }
+            result = builder.toString();
+
+            Log.d("DB Select결과 :", result);
+
+
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e){
+
+        }
+
+        return result;
+    }
+
 }
 
