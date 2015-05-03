@@ -254,6 +254,8 @@ public final class IntentIntegrator {
      *
      * @param text
      *            the text string to encode as a barcode
+     *
+     * 결과 값 저장.
      */
     public void shareText(CharSequence text) {
         Intent intent = new Intent();

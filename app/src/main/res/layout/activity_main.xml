@@ -18,4 +18,12 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="DB Test"
+        android:id="@+id/DBbtn"
+        android:layout_above="@+id/buttonScanQrCode"
+        android:layout_alignParentEnd="true" />
+
 </RelativeLayout>

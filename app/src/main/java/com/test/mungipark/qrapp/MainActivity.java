@@ -1,7 +1,9 @@
 package com.test.mungipark.qrapp;
 
 import android.app.Activity;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.content.Intent;
@@ -10,15 +12,27 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 
 public class MainActivity extends Activity {
 
     private TextView tvResult;
+    private String result;//DB결과값
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         setUpView();
     }
 
@@ -28,6 +42,16 @@ public class MainActivity extends Activity {
         tvResult = (TextView) this.findViewById(R.id.textViewResult);
         Button btnScanQRCode = (Button) this
                 .findViewById(R.id.buttonScanQrCode);
+        Button DBbtn = (Button) this.findViewById(R.id.DBbtn);
+
+        DBbtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new inputDB().execute();//DB접근 스레드 시작.
+            }
+        });
+
+        //QR코드 인식하기위한 바코드 인식용 액티비티 생성
         btnScanQRCode.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -69,6 +93,24 @@ public class MainActivity extends Activity {
         }
     }
 
+    private class inputDB extends AsyncTask<Void, Void, String> {
+
+        @Override
+        // 백그라운드에서 작업할 작업을 지시함
+        protected String doInBackground(Void... params) {
+            String output;
+            Log.d("백그라운드 작업", "실행완료");
+            output = ShowData();
+            return output;
+        }
+
+        protected void onPostExecute(String temp){
+
+
+        }
+    }
+
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -81,7 +123,7 @@ public class MainActivity extends Activity {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+      int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
@@ -90,4 +132,54 @@ public class MainActivity extends Activity {
 
         return super.onOptionsItemSelected(item);
     }
+
+    //데이터 넘기는 함수 - AsyncTask 스레드에 탐재할 함수
+    private String ShowData(){
+        URL url = null;
+        try {
+            url = new URL("http://192.168.0.104/insert__menu.php");
+
+            HttpURLConnection http = (HttpURLConnection) url.openConnection();//php접속
+
+            http.setDefaultUseCaches(false);
+            http.setDoInput(true);//서버 읽기 모드
+            http.setDoOutput(true);//서버 쓰기 모드
+            http.setRequestMethod("POST");//POST방식 전송(보안용)
+            http.setRequestProperty("content-type", "application/x-www-form-urlencoded");
+
+            //php에 파라미터 넘겨주는 작업 시작.
+            StringBuffer buffer = new StringBuffer();
+            buffer.append("date").append("=").append("20150503").append("&");
+            buffer.append("name").append("=").append("알레르기약");
+            buffer.append("number").append("=").append(30);
+            buffer.append("type").append("=").append(1);
+
+            //Php에 파라미터 값 넘기기
+            OutputStreamWriter outStream = new OutputStreamWriter(http.getOutputStream(), "UTF-8");
+            PrintWriter writer = new PrintWriter(outStream);
+            writer.write(buffer.toString());
+            writer.flush();
+
+            //파라미터값 넘기고나서 나오는 결과 받기
+            InputStreamReader tmp = new InputStreamReader(http.getInputStream(), "UTF-8");
+            BufferedReader reader = new BufferedReader(tmp);
+            StringBuilder builder = new StringBuilder();
+            String str;
+            while((str = reader.readLine()) != null){
+                builder.append(str + "\n");
+            }
+            result = builder.toString();
+            Log.d("DB Connection Test", "Test Complete");
+            tvResult.setText(result);//처리된 Php결과문 표시
+
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e){
+
+        }
+
+        return result;
+    }
 }
+
