@@ -9,9 +9,9 @@
     <TextView android:text="@string/hello_world" android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/textViewResult"
-        android:layout_alignParentEnd="true"
+        android:layout_above="@+id/buttonScanQrCode"
         android:layout_alignParentStart="true"
-        android:layout_above="@+id/buttonScanQrCode" />
+        android:layout_marginBottom="106dp" />
 
     <Button
         android:layout_width="wrap_content"
@@ -26,7 +26,14 @@
         android:layout_height="wrap_content"
         android:text="ShowDate"
         android:id="@+id/showbtn"
-        android:layout_below="@+id/textViewResult"
+        android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true" />
+
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/descriptionListView"
+        android:layout_alignParentStart="true"
+        android:layout_above="@+id/textViewResult" />
 
 </RelativeLayout>
