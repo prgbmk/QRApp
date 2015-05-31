@@ -86,6 +86,7 @@ public class GcmIntentService extends IntentService {
 
     // Put the message into a notification and post it.
     // This is just one simple example of what you might choose to do with
+    // 여기서 푸쉬 알람 메세지를 처리하고 작업한다.
     // a GCM message.
     private void sendNotification(String msg) {
         mNotificationManager = (NotificationManager)
@@ -94,10 +95,10 @@ public class GcmIntentService extends IntentService {
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                 new Intent(this, MainActivity.class), 0);
 
-        //Comma대로
+        //타이틀..여기서
+        //메세지 부분에는 밑의 getTakeMedicineMessage메소드에서 처리.
         String commaTok[] = msg.split(",");
         String Title[] = commaTok[1].split("=");
-        String Message[] = commaTok[2].split("=");
 
 
         NotificationCompat.Builder mBuilder =
@@ -105,10 +106,44 @@ public class GcmIntentService extends IntentService {
         .setSmallIcon(R.drawable.ic_stat_gcm)
         .setContentTitle(Title[1])
         .setStyle(new NotificationCompat.BigTextStyle()
-                .bigText(Message[1]))
-        .setContentText(Message[1]);
+                .bigText(getTakeMedicineMessage(msg)))
+        .setContentText(getTakeMedicineMessage(msg));
 
         mBuilder.setContentIntent(contentIntent);
         mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
+
+    //복약 알림 정보 해석하여 반환해주는 메소드
+    private String getTakeMedicineMessage(String msg){
+
+        String notiMessage = null;//실제로 넘겨줄 값
+        //Comma대로
+        String commaTok[] = msg.split(",");
+        String Title[] = commaTok[1].split("=");
+        String Message[] = commaTok[2].split("=");
+
+        String verticalTok[] = Message[1].split("[|]");
+        String dashTok[]=null;
+
+
+        //복약 알림 메세지 해석해서 저장.
+        for(int i = 0, k = 0; i<verticalTok.length; i++){
+            dashTok = verticalTok[i].split("-");//(날짜 - 처방내용(알레르기약*30*7)) 분리.
+            String enterTok[] = dashTok[1].split("\n");//복약 정보(알레르기약*30*7) 분리
+            String starTok[] = null;
+            for(int j=0; j<enterTok.length; j++){
+                starTok = enterTok[j].split("[*]");//약, 수량, 타입이 분리되어 나눠짐.
+                if(k == 0){
+                    notiMessage = "<처방내용>\n" + (dashTok[0]  + starTok[0] + "은 "+ starTok[1] + "개 " + starTok[3] + "일치 남\n");
+                }
+                else{
+                    notiMessage = notiMessage +  (dashTok[0]  + starTok[0] + "은 "+ starTok[1] + "개 " + starTok[3] + "일치 남음\n");
+                }
+                k++;
+            }
+        }
+        return notiMessage;
+    }
+
+
 }
