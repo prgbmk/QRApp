@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -32,9 +33,6 @@ import java.util.ArrayList;
 
 
 public class MainActivity extends Activity {
-
-    //UI들
-    private TextView tvResult;
 
     //GCM 받기 위한 객체들
     private String SENDER_ID = "1077167000598";//프로젝트 API 생성 아이디.
@@ -46,18 +44,23 @@ public class MainActivity extends Activity {
     private int i;
 
     //커스텀된 ArrayList
-    ArrayList<MydescriptionValue> descriptionValues;
+    private ArrayList<MydescriptionValue> descriptionValues;
+    private ArrayList<titleValue> titleValues;
+
     MydescriptionValue myvalue;//센서값 담는 객체(커스텀된거) - 그림, 값.
-    ListView descriptionValuesList;
+    titleValue mytitlevalue;
+
+    ListView descriptionValuesList;//처방약정보용 리스트뷰
+    ListView titleList;//타이틀용 리스트뷰
 
     //어댑터 준비
-    MydescriptionValueAdapter Adapter;
+    private MydescriptionValueAdapter Adapter;
+    private title_Adapter titleAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
 
         //GCM용 객체 초기화
         gcm = GoogleCloudMessaging.getInstance(this);
@@ -65,9 +68,21 @@ public class MainActivity extends Activity {
 
         //커스텀 리스트뷰용 객체 선언.
         descriptionValues = new ArrayList<MydescriptionValue>();
+        titleValues = new ArrayList<titleValue>();
         Adapter = new MydescriptionValueAdapter(this, R.layout.item, descriptionValues);
+        titleAdapter = new title_Adapter(this, R.layout.titleitem, titleValues);
 
         setUpView();
+    }
+
+    //바코드 읽고 새로 화면을 띄어줄 때 -> 다시 DB내용을 읽어와서 갱신
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+
+        //DB내용을 새로 띄어줌
+        new showDB().execute();
+
     }
 
     //어댑터 리스트에 DB 내용 간추려 넣는 메소드
@@ -75,12 +90,15 @@ public class MainActivity extends Activity {
         String enterTok[] = null;
         enterTok = DB_Result.split("\n");
 
+        descriptionValues.clear();//새로운 내용 올 때 갱신용
         int i=1;
         while(i <enterTok.length){
             String starTok[] = enterTok[i].split("[*]");
-            myvalue = new MydescriptionValue(starTok[0], starTok[1] + " " + starTok[2] + "개 남음");
+            myvalue = new MydescriptionValue(starTok[0], starTok[1] + " " + starTok[2] + "개 남음 - " + starTok[4] +"일치 남았습니다.");
+
             descriptionValues.add(myvalue);
             i++;
+            Log.d("data:", DB_Result);
         }
         //모아진 어댑터 값을 ListView에 적용
         descriptionValuesList.setAdapter(Adapter);
@@ -89,13 +107,28 @@ public class MainActivity extends Activity {
     //onCreate()메소드에 실을 초기화 메소드
     private void setUpView() {
         // TODO Auto-generated method stub
-        tvResult = (TextView) this.findViewById(R.id.textViewResult);
         descriptionValuesList = (ListView)this.findViewById(R.id.descriptionListView);
+        titleList = (ListView)this.findViewById(R.id.titleListview);
 
-        Button btnScanQRCode = (Button) this
-                .findViewById(R.id.buttonScanQrCode);
-        Button Showbtn = (Button) this.findViewById(R.id.showbtn);//DB 저장된 내용 보기
+        Button btnScanQRCode = (Button) this.findViewById(R.id.buttonScanQrCode);
+        Button backBtn = (Button)this.findViewById(R.id.backBtn);//뒤로가기 버튼
+        Button sideeffectBtn = (Button)this.findViewById(R.id.sideEffectBtn);//부작용 창
 
+
+
+        new showDB().execute();
+
+        mytitlevalue = new titleValue("처방날짜", "약이름              남은 처방일수");
+        titleValues.add(mytitlevalue);
+        titleList.setAdapter(titleAdapter);
+
+        sideeffectBtn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                Intent sideIntent = new Intent(MainActivity.this, activity_sideeffect.class);
+                startActivity(sideIntent);
+            }
+        });
 
         //QR코드 인식하기위한 바코드 인식용 액티비티 생성
         btnScanQRCode.setOnClickListener(new View.OnClickListener() {
@@ -109,15 +142,6 @@ public class MainActivity extends Activity {
 
             }
         });
-        Showbtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new showDB().execute();
-                //tvResult.setText(result);
-            }
-        });
-
-
 
     }
     //QR코드 결과값을 처리해주는 메소드 부분
@@ -135,20 +159,23 @@ public class MainActivity extends Activity {
             String[] tmpStr;//처방정보 저장할 String 객체
 
             tmpStr = contantsString.split("\n");//칸바꾸기로 나눈 값을 다 저장해.
-            QRdate = tmpStr[0];//날짜정보
-            QRname = tmpStr[1].split(",");//처방약 정보
-            QRnumber = tmpStr[2].split(",");
-            QRtype = tmpStr[3].split(",");
-            Log.d("All Info : ", contantsString);
-            Log.d("tmp Info:", QRname[2]);
-            Log.d("Date : ", QRdate);
 
+            try{
+                QRdate = tmpStr[0];//날짜정보
+                QRname = tmpStr[1].split(",");//처방약 정보
+                QRnumber = tmpStr[2].split(",");
+                QRtype = tmpStr[3].split(",");
+                Log.d("All Info : ", contantsString);
+                //Log.d("tmp Info:", QRname[i]);
+                //Log.d("Date : ", QRdate);
+                //Log.d("name : ", QRname[i]);
 
-            Log.d("name : ", QRname[i]);
-            new inputDB().execute();//DB삽입 스레드 시작.
+                new inputDB().execute();//DB삽입 스레드 시작.
+            }
+            catch(Exception e){
 
-
-            tvResult.setText(contantsString);
+            }
+            //tvResult.setText(contantsString);
 
             if (contantsString.equalsIgnoreCase("0")) {
                 Toast.makeText(this, "콘텐츠 넘버 얻는데 문제가 있습니다.",
@@ -232,7 +259,7 @@ public class MainActivity extends Activity {
         try {
 
             while(i<QRname.length) {
-                url = new URL("http://119.199.154.131/insert_menu(Description).php");
+                url = new URL("http://121.156.24.248/insert_menu(Description).php");
 
                 HttpURLConnection http = (HttpURLConnection) url.openConnection();//php접속
 
@@ -294,7 +321,7 @@ public class MainActivity extends Activity {
         URL url = null;
         try {
             //url = new URL("http://192.168.0.104/show_data_date.php");
-            url = new URL("http://119.199.154.131/show_data.php");
+            url = new URL("http://121.156.24.248/show_data.php");
 
             HttpURLConnection http = (HttpURLConnection) url.openConnection();//php접속
 
@@ -422,6 +449,66 @@ class MydescriptionValueAdapter extends BaseAdapter {
 
         TextView description = (TextView) convertView.findViewById(R.id.description);
         description.setText(arD.get(position).Description);
+
+        return convertView;
+    }
+}
+
+class titleValue {
+    String Date_title;
+    String Description_title;
+
+    //기본 생성자.
+    titleValue(String Date, String Description){
+        this.Date_title = Date;
+        this.Description_title = Description;
+    }
+}
+
+//BaseAdapter 인터페이스를 오버라이드하여 커스텀 구현
+class title_Adapter extends BaseAdapter {//제목 부분
+
+    Context con;
+    LayoutInflater inflater;
+    ArrayList<titleValue> arD;
+    int layout;
+
+    //기본 생성자
+    public title_Adapter(Context con, int layout, ArrayList<titleValue> arD){
+        this.con = con;
+        this.inflater = (LayoutInflater) con.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        this.arD = arD;
+        this.layout = layout;
+    }
+
+    //어댑터 몇 개의 항목이 있는지 확인
+    @Override
+    public int getCount() {
+        return arD.size();
+    }
+
+    //Position 위치의 항목 Value 반환
+    @Override
+    public Object getItem(int position) {
+        return arD.get(position).Date_title;
+    }
+
+    //Position 위치의 ID 반환
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
+    @Override
+    public View getView(final int position, View convertView, ViewGroup parent) {
+        if(convertView == null){
+            convertView = inflater.inflate(layout, parent, false);
+        }
+        TextView date = (TextView) convertView.findViewById(R.id.date_name);
+        date.setText(arD.get(position).Date_title);
+
+        TextView description = (TextView) convertView.findViewById(R.id.description_name);
+        description.setText(arD.get(position).Description_title);
 
         return convertView;
     }

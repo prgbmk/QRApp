@@ -4,37 +4,80 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity"
-    >
-
-    <TextView android:text="@string/hello_world" android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/textViewResult"
-        android:layout_above="@+id/buttonScanQrCode"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="106dp" />
+    android:alpha="40">
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="QR Code Capture"
+        android:text="처방전 저장"
         android:id="@+id/buttonScanQrCode"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="ShowDate"
-        android:id="@+id/showbtn"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true" />
 
     <ListView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/descriptionListView"
+        android:background="@color/switch_thumb_normal_material_light"
         android:layout_alignParentStart="true"
-        android:layout_above="@+id/textViewResult"
-        android:layout_alignParentTop="true" />
+        android:layout_above="@+id/buttonScanQrCode"
+        android:layout_below="@+id/titleListview"
+        android:layout_alignParentEnd="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="&lt; 이전화면"
+        android:id="@+id/backBtn"
+        android:layout_below="@+id/descriptionListView"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="부작용 >"
+        android:id="@+id/sideEffectBtn"
+        android:layout_alignParentBottom="true"
+        android:layout_alignEnd="@+id/descriptionListView" />
+
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:id="@+id/titleListview"
+        android:background="#c9c9c9"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/userTxt"
+        android:layout_alignParentEnd="true" />
+
+    <ImageView
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:id="@+id/imageView"
+        android:src="@drawable/photo"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="복약 관리 시스템"
+        android:id="@+id/title"
+        android:textStyle="bold"
+        android:textSize="30dp"
+        android:layout_marginTop="39dp"
+        android:layout_alignTop="@+id/imageView"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="박문기"
+        android:id="@+id/userTxt"
+        android:layout_below="@+id/imageView"
+        android:layout_alignEnd="@+id/imageView"
+        android:textStyle="bold"
+        android:textColor="#000000" />
 
 </RelativeLayout>
